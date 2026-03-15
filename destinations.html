@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experience — Crislynn Ventures</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="destinations.css">
+
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ── LOADING ── -->
+<div id="loading">
+  <div class="loader-logo">Crislynn <span>Ventures</span></div>
+  <div class="loader-bar"></div>
+</div>
+
+<!-- ── NAVBAR ── -->
+<nav>
+  <div class="nav-logo">
+    <img src="images/Crislynn-logo.png" alt="Crislynn Ventures Logo">
+  </div>
+  <a href="index.html#experiences" class="nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>
+    All Experiences
+  </a>
+</nav>
+
+<!-- ── MAIN CONTENT (hidden until data loads) ── -->
+<div id="dest-content">
+
+  <!-- HERO -->
+  <section id="dest-hero">
+    <div class="dest-hero-bg" id="heroBg"></div>
+    <div class="dest-hero-overlay"></div>
+    <div class="dest-hero-content">
+      <div class="dest-hero-breadcrumb">
+        <span>Crislynn Ventures</span>
+        <span>·</span>
+        <span id="heroCategoryText">Experiences</span>
+      </div>
+      <div class="dest-hero-tag" id="heroDurationTag"></div>
+      <h1 class="dest-hero-title" id="heroTitle"></h1>
+      <p class="dest-hero-tagline" id="heroTagline"></p>
+    </div>
+    <div class="dest-scroll-hint">Scroll to explore</div>
+  </section>
+
+  <div class="dest-body">
+
+    <!-- OVERVIEW -->
+    <div class="dest-overview">
+      <div>
+        <span class="dest-section-eyebrow reveal-up">About This Experience</span>
+        <div class="dest-divider"></div>
+        <div class="dest-description reveal-up delay-1" id="destDescription"></div>
+      </div>
+      <div class="dest-meta reveal-up delay-2">
+        <div class="dest-meta-row">
+          <div class="dest-meta-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dest-meta-label">Duration</div>
+            <div class="dest-meta-value" id="metaDuration"></div>
+          </div>
+        </div>
+        <div class="dest-meta-row">
+          <div class="dest-meta-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 6h16M4 10h10M4 14h7"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dest-meta-label">Category</div>
+            <div class="dest-meta-value" id="metaCategory"></div>
+          </div>
+        </div>
+        <div class="dest-meta-row">
+          <div class="dest-meta-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dest-meta-label">Departure</div>
+            <div class="dest-meta-value">Malindi, Kenya</div>
+          </div>
+        </div>
+        <div class="dest-meta-row">
+          <div class="dest-meta-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div>
+            <div class="dest-meta-label">Suitable For</div>
+            <div class="dest-meta-value">Individuals, Couples, Families, Groups</div>
+          </div>
+        </div>
+        <div class="dest-meta-cta">
+          <a href="#cta-band" class="btn-primary">Book This Experience</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ITINERARY -->
+    <section id="itinerary-section">
+      <span class="dest-section-eyebrow reveal-up">Your Journey</span>
+      <h2 class="dest-section-title reveal-up delay-1">Day by Day Itinerary</h2>
+      <div class="itinerary-container">
+        <div class="itinerary-line"></div>
+        <div id="itineraryList"></div>
+      </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section id="gallery-section">
+      <span class="dest-section-eyebrow reveal-up">Gallery</span>
+      <h2 class="dest-section-title reveal-up delay-1">Moments From This Experience</h2>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </section>
+
+    <!-- MAP -->
+    <section id="map-section">
+      <span class="dest-section-eyebrow reveal-up">Location</span>
+      <h2 class="dest-section-title reveal-up delay-1">Where You're Headed</h2>
+      <div class="map-container reveal-up delay-2">
+        <div class="map-overlay-label" id="mapLabel"></div>
+        <iframe id="mapFrame" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade" title="Experience Location"></iframe>
+      </div>
+    </section>
+
+    <!-- RELATED -->
+    <section id="related-section">
+      <span class="dest-section-eyebrow reveal-up">Continue Exploring</span>
+      <h2 class="dest-section-title reveal-up delay-1">You Might Also Love</h2>
+      <div class="related-grid" id="relatedGrid"></div>
+    </section>
+
+  </div><!-- /.dest-body -->
+</div><!-- /#dest-content -->
+
+<!-- ── ERROR STATE ── -->
+<div id="error-state">
+  <h2 class="error-title">Experience Not Found</h2>
+  <p class="error-sub">We couldn't find the experience you're looking for.</p>
+  <a href="index.html#experiences" class="btn-primary">Back to All Experiences</a>
+</div>
+
+<!-- ── LIGHTBOX ── -->
+<div id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M18 6L6 18M6 6l12 12"/>
+    </svg>
+  </button>
+  <button class="lightbox-nav lightbox-prev" id="lightboxPrev">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+  </button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="">
+  <button class="lightbox-nav lightbox-next" id="lightboxNext">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M9 18l6-6-6-6"/>
+    </svg>
+  </button>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+</div>
+
+<!-- ── CTA BAND ── -->
+<div id="cta-band">
+  <div class="cta-band-inner">
+    <p class="cta-eyebrow">Ready to Travel?</p>
+    <h2 class="cta-title">Let's Make This <em>Your Story.</em></h2>
+    <p class="cta-sub">Share your travel dates and we'll craft a personalised proposal within 2 hours.</p>
+    <div class="cta-btns">
+      <a id="ctaWhatsApp" href="#" class="btn-primary" target="_blank">
+        Enquire on WhatsApp
+      </a>
+      <a href="index.html#contact" class="btn-outline-light">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 4h16v12H4zM8 20h8M12 16v4"/>
+        </svg>
+        Full Enquiry Form
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<div class="dest-footer">
+  <p>© 2026 Crislynn Ventures Ltd. · Malindi, Kenya</p>
+</div>
+
+<script src="destinations.js"></script>
+</body>
+</html>
