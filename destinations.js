@@ -1,44 +1,47 @@
 // ─────────────────────────────────────────────
 // CONFIGURATION
 // ─────────────────────────────────────────────
-var SUPABASE_URL      = 'https://hcalcyyzwtwbupkxpwkn.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYWxjeXl6d3R3YnVwa3hwd2tuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzM2NjksImV4cCI6MjA4OTE0OTY2OX0.-VkzGML-CQIuWhH49iybrxwxnX1ClCeOSim_mjfZ4gM';
+const SUPABASE_URL      = 'https://hcalcyyzwtwbupkxpwkn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYWxjeXl6d3R3YnVwa3hwd2tuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzM2NjksImV4cCI6MjA4OTE0OTY2OX0.-VkzGML-CQIuWhH49iybrxwxnX1ClCeOSim_mjfZ4gM';
 
 // ─────────────────────────────────────────────
-// REST API HELPER — no SDK needed
+// REST API HELPER
 // ─────────────────────────────────────────────
-async function dbGet(table, query = '') {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+async function dbGet(table, query) {
+  const url = query
+    ? `${SUPABASE_URL}/rest/v1/${table}?${query}`
+    : `${SUPABASE_URL}/rest/v1/${table}`;
+  const res = await fetch(url, {
     headers: {
       'apikey': SUPABASE_ANON_KEY,
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
     }
   });
+  if (!res.ok) throw new Error(`Supabase error: ${res.status}`);
   return res.json();
 }
 
 // ─────────────────────────────────────────────
-// STATE
+// STATE — wrapped in object to avoid global conflicts
 // ─────────────────────────────────────────────
-let galleryImages = [];
-let lightboxIndex = 0;
+const destState = {
+  galleryImages: [],
+  lightboxIndex: 0
+};
 
 // ─────────────────────────────────────────────
-// INIT — fetch all data and render the page
+// INIT
 // ─────────────────────────────────────────────
 async function init() {
   const params = new URLSearchParams(window.location.search);
-  const slug   = params.get('id');
-
+  const slug = params.get('id');
   if (!slug) { showError(); return; }
 
   try {
-    // Fetch the experience by slug
     const expArr = await dbGet('experiences', `slug=eq.${slug}`);
     if (!expArr || expArr.length === 0) { showError(); return; }
     const exp = expArr[0];
 
-    // Fetch itinerary, gallery, related in parallel
     const [itinerary, gallery, related] = await Promise.all([
       dbGet('itinerary_items', `experience_id=eq.${exp.id}&order=step_order.asc`),
       dbGet('gallery_images',  `experience_id=eq.${exp.id}&order=sort_order.asc`),
@@ -54,7 +57,7 @@ async function init() {
 }
 
 // ─────────────────────────────────────────────
-// RENDER — populate the DOM with fetched data
+// RENDER
 // ─────────────────────────────────────────────
 function renderPage(exp, itinerary, gallery, related) {
   document.title = `${exp.title} — Crislynn Ventures`;
@@ -68,7 +71,7 @@ function renderPage(exp, itinerary, gallery, related) {
   document.getElementById('heroTitle').textContent        = exp.title;
   document.getElementById('heroTagline').textContent      = exp.tagline || '';
 
-  // Overview text
+  // Description
   const descEl = document.getElementById('destDescription');
   (exp.description || '').split('\n\n').forEach(paragraph => {
     if (!paragraph.trim()) return;
@@ -85,7 +88,7 @@ function renderPage(exp, itinerary, gallery, related) {
   renderItinerary(itinerary);
   renderGallery(gallery);
   renderMap(exp);
-  renderRelated(related, exp.slug);
+  renderRelated(related);
 
   // WhatsApp CTA
   const msg = encodeURIComponent(
@@ -93,12 +96,11 @@ function renderPage(exp, itinerary, gallery, related) {
   );
   document.getElementById('ctaWhatsApp').href = `https://wa.me/254794464898?text=${msg}`;
 
-  // Reveal page
+  // Show page, hide loader
   document.getElementById('dest-content').classList.add('visible');
   document.getElementById('cta-band').style.display = 'block';
   document.getElementById('loading').classList.add('hidden');
 
-  // Kick off scroll observers
   setupRevealObserver();
   setupItineraryObserver();
 }
@@ -108,8 +110,11 @@ function renderPage(exp, itinerary, gallery, related) {
 // ─────────────────────────────────────────────
 function renderItinerary(items) {
   const container = document.getElementById('itineraryList');
+  if (!items.length) {
+    document.getElementById('itinerary-section').style.display = 'none';
+    return;
+  }
 
-  // Group steps by day_label (null → '__single__')
   const days = {};
   items.forEach(item => {
     const key = item.day_label || '__single__';
@@ -153,7 +158,7 @@ function renderGallery(images) {
     return;
   }
 
-  galleryImages = images;
+  destState.galleryImages = images;
   const grid = document.getElementById('galleryGrid');
 
   images.slice(0, 4).forEach((img, i) => {
@@ -187,9 +192,9 @@ function renderMap(exp) {
 }
 
 // ─────────────────────────────────────────────
-// RELATED EXPERIENCES
+// RELATED
 // ─────────────────────────────────────────────
-function renderRelated(items, currentSlug) {
+function renderRelated(items) {
   if (!items.length) {
     document.getElementById('related-section').style.display = 'none';
     return;
@@ -216,7 +221,7 @@ function renderRelated(items, currentSlug) {
 // LIGHTBOX
 // ─────────────────────────────────────────────
 function openLightbox(index) {
-  lightboxIndex = index;
+  destState.lightboxIndex = index;
   updateLightbox();
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -228,12 +233,12 @@ function closeLightbox() {
 }
 
 function shiftLightbox(dir) {
-  lightboxIndex = (lightboxIndex + dir + galleryImages.length) % galleryImages.length;
+  destState.lightboxIndex = (destState.lightboxIndex + dir + destState.galleryImages.length) % destState.galleryImages.length;
   updateLightbox();
 }
 
 function updateLightbox() {
-  const img = galleryImages[lightboxIndex];
+  const img = destState.galleryImages[destState.lightboxIndex];
   const el  = document.getElementById('lightboxImg');
   el.style.opacity = '0';
   el.src = img.url;
@@ -243,15 +248,13 @@ function updateLightbox() {
     el.style.opacity    = '1';
   };
   document.getElementById('lightboxCounter').textContent =
-    `${lightboxIndex + 1} / ${galleryImages.length}`;
+    `${destState.lightboxIndex + 1} / ${destState.galleryImages.length}`;
 }
 
-// Lightbox button events
 document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
 document.getElementById('lightboxPrev').addEventListener('click', () => shiftLightbox(-1));
 document.getElementById('lightboxNext').addEventListener('click', () => shiftLightbox(1));
 
-// Keyboard navigation
 document.addEventListener('keydown', e => {
   if (!document.getElementById('lightbox').classList.contains('open')) return;
   if (e.key === 'ArrowLeft')  shiftLightbox(-1);
@@ -260,7 +263,7 @@ document.addEventListener('keydown', e => {
 });
 
 // ─────────────────────────────────────────────
-// SCROLL REVEAL OBSERVERS
+// SCROLL REVEAL
 // ─────────────────────────────────────────────
 function setupRevealObserver() {
   const observer = new IntersectionObserver(entries => {
@@ -271,7 +274,6 @@ function setupRevealObserver() {
       }
     });
   }, { threshold: 0.1 });
-
   document.querySelectorAll('.reveal-up').forEach(el => observer.observe(el));
 }
 
@@ -284,12 +286,11 @@ function setupItineraryObserver() {
       }
     });
   }, { threshold: 0.15 });
-
   document.querySelectorAll('.itinerary-step').forEach(el => observer.observe(el));
 }
 
 // ─────────────────────────────────────────────
-// ERROR STATE
+// ERROR
 // ─────────────────────────────────────────────
 function showError() {
   document.getElementById('loading').classList.add('hidden');
