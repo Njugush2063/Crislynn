@@ -1,12 +1,22 @@
 // ─────────────────────────────────────────────
-// CONFIGURATION — replace with your own values
+// CONFIGURATION
 // ─────────────────────────────────────────────
-fetch('https://hcalcyyzwtwbupkxpwkn.supabase.co/rest/v1/experiences?slug=eq.bush-to-beach', {
-  headers: {
-    'apikey': document.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYWxjeXl6d3R3YnVwa3hwd2tuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzM2NjksImV4cCI6MjA4OTE0OTY2OX0.-VkzGML-CQIuWhH49iybrxwxnX1ClCeOSim_mjfZ4gM',
-    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYWxjeXl6d3R3YnVwa3hwd2tuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzM2NjksImV4cCI6MjA4OTE0OTY2OX0.-VkzGML-CQIuWhH49iybrxwxnX1ClCeOSim_mjfZ4gM'
-  }
-}).then(r => r.json()).then(d => console.log(d));
+const SUPABASE_URL      = 'https://hcalcyyzwtwbupkxpwkn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYWxjeXl6d3R3YnVwa3hwd2tuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzM2NjksImV4cCI6MjA4OTE0OTY2OX0.-VkzGML-CQIuWhH49iybrxwxnX1ClCeOSim_mjfZ4gM';
+
+// ─────────────────────────────────────────────
+// REST API HELPER — no SDK needed
+// ─────────────────────────────────────────────
+async function dbGet(table, query = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+    }
+  });
+  return res.json();
+}
+
 // ─────────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────────
@@ -23,31 +33,19 @@ async function init() {
   if (!slug) { showError(); return; }
 
   try {
-    // First fetch: get the experience and its UUID
-    const expRes = await db.from('experiences').select('*').eq('slug', slug).single();
-    if (expRes.error || !expRes.data) { showError(); return; }
+    // Fetch the experience by slug
+    const expArr = await dbGet('experiences', `slug=eq.${slug}`);
+    if (!expArr || expArr.length === 0) { showError(); return; }
+    const exp = expArr[0];
 
-    const exp = expRes.data;
-
-    // Parallel fetch: itinerary + gallery + related
-    const [itiRes, galRes, relRes] = await Promise.all([
-      db.from('itinerary_items')
-        .select('*')
-        .eq('experience_id', exp.id)
-        .order('step_order'),
-
-      db.from('gallery_images')
-        .select('*')
-        .eq('experience_id', exp.id)
-        .order('sort_order'),
-
-      exp.related_ids && exp.related_ids.length > 0
-        ? db.from('experiences').select('*').in('id', exp.related_ids).limit(3)
-        : db.from('experiences').select('*').eq('category', exp.category).neq('slug', slug).limit(3)
+    // Fetch itinerary, gallery, related in parallel
+    const [itinerary, gallery, related] = await Promise.all([
+      dbGet('itinerary_items', `experience_id=eq.${exp.id}&order=step_order.asc`),
+      dbGet('gallery_images',  `experience_id=eq.${exp.id}&order=sort_order.asc`),
+      dbGet('experiences',     `category=eq.${encodeURIComponent(exp.category)}&slug=neq.${slug}&limit=3`)
     ]);
 
-    const related = relRes.error ? [] : relRes.data;
-    renderPage(exp, itiRes.data || [], galRes.data || [], related);
+    renderPage(exp, itinerary || [], gallery || [], related || []);
 
   } catch (err) {
     console.error('Destinations init error:', err);
