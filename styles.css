@@ -63,7 +63,7 @@ nav.scrolled {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
-  color: #a7703a;
+  color: #faf9f8;
   transition: color 0.3s;
 }
 nav.scrolled .nav-links a { color: #a7703a; }
