@@ -63,7 +63,7 @@ nav.scrolled {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
-  color: #FFFFFF;
+  color: #faf9f8;
   transition: color 0.3s;
 }
 nav.scrolled .nav-links a { color: #a7703a; }
@@ -122,16 +122,11 @@ nav.scrolled .nav-burger span { background: #a7703a; }
   padding: 0 48px 48px;
 }
 
-.strip-header .section-eyebrow {
-  color: var(--gold);
-  margin-bottom: 14px;
-}
-
 .strip-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(32px, 4vw, 52px);
   font-weight: 300;
-  color: var(--white);
+  color: var(--gold);
   letter-spacing: 0.04em;
   line-height: 1.1;
 }
